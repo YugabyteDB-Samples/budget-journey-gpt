@@ -1,6 +1,5 @@
 package com.yugabyte.com.views.main;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.textfield.TextField;
@@ -10,9 +9,11 @@ import com.vaadin.flow.theme.lumo.Lumo;
 import com.yugabyte.com.PointOfInterest;
 import com.yugabyte.com.TripsAdvisorService;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.Binder;
 
@@ -28,51 +29,63 @@ public class PointsOfInterestView extends VerticalLayout {
     private final TripsAdvisorService tripsAdvisorService;
     private final Grid<PointOfInterest> grid;
     private final Binder<SearchCriteria> binder;
+    private final Button searchButton;
 
     public PointsOfInterestView(TripsAdvisorService tripsAdvisorService) {
         this.tripsAdvisorService = tripsAdvisorService;
 
         UI.getCurrent().getElement().setAttribute("theme", Lumo.DARK);
 
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setWidthFull();
-        titleLayout.setAlignItems(Alignment.CENTER);
+        HorizontalLayout logoLayout = new HorizontalLayout();
+        logoLayout.setWidthFull();
+        logoLayout.setAlignItems(Alignment.BASELINE);
 
-        Label title = new Label("Trip On Budget");
+        Label title = new Label("TripOnBudget");
         title.getStyle().set("font-weight", "bold");
         title.getStyle().set("font-size", "20px");
 
-        titleLayout.add(title);
+        Image logo = new Image("images/trip_on_budget.png", "");
+        logo.setMaxWidth("55px");
+
+        logoLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+
+        logoLayout.add(logo, title);
 
         // Create the binder for the search criteria
         binder = new Binder<>(SearchCriteria.class);
 
         HorizontalLayout userInputLayout = new HorizontalLayout();
+        userInputLayout.setDefaultVerticalComponentAlignment(Alignment.END);
 
         // Create the text fields for the search criteria
-        TextField cityField = new TextField("City you want to go to:");
+        TextField cityField = new TextField("Your next destination:");
         cityField.setWidth("300px");
         cityField.getStyle().set("margin-right", "10px");
+        cityField.setPlaceholder("city name");
+
         binder.forField(cityField)
                 .asRequired("City name is required")
                 .bind(SearchCriteria::getCity, SearchCriteria::setCity);
 
-        IntegerField budgetField = new IntegerField("Your budget in dollars");
+        IntegerField budgetField = new IntegerField("Your budget:");
         budgetField.setWidth("300px");
         budgetField.getStyle().set("margin-right", "10px");
+        budgetField.setPlaceholder("dollars");
+
         binder.forField(budgetField)
                 .asRequired("Budget is required")
                 .withValidator(budget -> budget > 0, "Budget must be greater than zero")
                 .bind(SearchCriteria::getBudget, SearchCriteria::setBudget);
 
-        userInputLayout.add(cityField, budgetField);
-
         // Create the search button
-        Button searchButton = new Button("Show me places!");
+        searchButton = new Button("Go!");
         searchButton.getStyle().set("margin-top", "10px");
         searchButton.addClickListener(e -> searchPointsOfInterest());
+        searchButton.setDisableOnClick(true);
 
-        add(titleLayout, userInputLayout, searchButton);
+        userInputLayout.add(cityField, budgetField, searchButton);
+
+        add(logoLayout, userInputLayout);
 
         // Create the grid to display the points of interest
         grid = new Grid<>();
@@ -95,12 +108,16 @@ public class PointsOfInterestView extends VerticalLayout {
 
         if (binder.writeBeanIfValid(searchCriteria)) {
             // Call the suggestPointsOfInterest method and update the grid with the results
+
             Optional<List<PointOfInterest>> optionalPointsOfInterest = tripsAdvisorService
                     .suggestPointsOfInterest(searchCriteria.getCity(), searchCriteria.getBudget());
+
             if (optionalPointsOfInterest.isPresent()) {
                 List<PointOfInterest> pointsOfInterest = optionalPointsOfInterest.get();
                 grid.setItems(pointsOfInterest);
             }
+
+            searchButton.setEnabled(true);
         }
     }
 
