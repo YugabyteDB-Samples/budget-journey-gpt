@@ -8,16 +8,22 @@ import java.util.Optional;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
+import com.yugabyte.com.jpa.CityTrip;
+import com.yugabyte.com.jpa.CityTripRepository;
 
 import jakarta.annotation.PostConstruct;
 
 @Service
 public class TripsAdvisorService {
+
+    @Autowired
+    private CityTripRepository cityTripsRepository;
 
     private static OpenAiService openAiService;
 
@@ -45,32 +51,26 @@ public class TripsAdvisorService {
         System.out.println("Connected to the OpenAI API");
     }
 
-    public Optional<List<PointOfInterest>> suggestPointsOfInterest(String city, int cost) {
-        String request = String.format("I want to visit %s and have a budget of %d dollars", city, cost);
-
-        String response = sendMessage(request);
+    public Optional<List<PointOfInterest>> suggestPointsOfInterest(String city, int budget) {
+        String poi = cityTripsRepository.findPointsOfInterest(city, budget);
 
         try {
-            JSONObject jsonResponse = new JSONObject(response);
-            JSONArray places = jsonResponse.getJSONArray("places");
+            List<PointOfInterest> poiList;
 
-            List<PointOfInterest> poiList = new ArrayList<>(places.length());
+            if (poi != null) {
+                poiList = generaPointsOfInterest(poi);
+            } else {
+                String request = String.format("I want to visit %s and have a budget of %d dollars", city, budget);
+                poi = sendMessage(request);
 
-            for (int i = 0; i < places.length(); i++) {
-                JSONObject place = places.getJSONObject(i);
+                poiList = generaPointsOfInterest(poi);
 
-                PointOfInterest poi = new PointOfInterest(
-                        place.getString("place_name"),
-                        place.getString("place_short_info"),
-                        place.getInt("place_visit_cost"));
-
-                System.out.println(poi);
-                poiList.add(poi);
+                cityTripsRepository.save(new CityTrip(city, budget, poi));
             }
 
             return Optional.of(poiList);
         } catch (JSONException e) {
-            System.err.println("Failed to parse: " + response);
+            System.err.println("Failed to parse: " + poi);
             e.printStackTrace();
             return Optional.empty();
         }
@@ -95,4 +95,26 @@ public class TripsAdvisorService {
 
         return builder.toString();
     }
+
+    private List<PointOfInterest> generaPointsOfInterest(String json) {
+        JSONObject jsonResponse = new JSONObject(json);
+        JSONArray places = jsonResponse.getJSONArray("places");
+
+        List<PointOfInterest> poiList = new ArrayList<>(places.length());
+
+        for (int i = 0; i < places.length(); i++) {
+            JSONObject place = places.getJSONObject(i);
+
+            PointOfInterest poi = new PointOfInterest(
+                    place.getString("place_name"),
+                    place.getString("place_short_info"),
+                    place.getInt("place_visit_cost"));
+
+            System.out.println(poi);
+            poiList.add(poi);
+        }
+
+        return poiList;
+    }
+
 }
