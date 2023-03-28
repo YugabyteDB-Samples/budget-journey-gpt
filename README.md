@@ -34,5 +34,6 @@ mvn spring-boot:run
 
 The application should automatically open a browser window on the following address: http://localhost:8080
 
+<img width="1505" alt="tokyo" src="https://user-images.githubusercontent.com/1537233/228314699-dfd48764-3565-4dca-8875-caf9ae3f3e8b.png">
 
 To experience what BudgetJourney has to offer, simply provide a city name and budget limit. Please note that it may take 30 seconds or more for the OpenAI GPT to generate suggestions. However, to enhance efficiency, all previous suggestions are stored in the YugabyteDB database and will be served from there whenever you inquire about the same city and budget again.
