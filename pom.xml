@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
     <!-- Project from https://start.vaadin.com/ -->
     <groupId>com.yugabyte.com</groupId>
-    <artifactId>trip-on-budget-gpt</artifactId>
-    <name>TripOnBudget-GPT</name>
+    <artifactId>budget-journey-gpt</artifactId>
+    <name>BudgetJourney</name>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 

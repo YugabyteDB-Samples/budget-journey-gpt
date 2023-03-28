@@ -3,12 +3,11 @@ package com.yugabyte.com;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
@@ -26,6 +25,12 @@ public class TripsAdvisorService {
     private CityTripRepository cityTripsRepository;
 
     private static OpenAiService openAiService;
+
+    @Value("${openai.key}")
+    private String apiKey;
+
+    @Value("${openai.timeout}")
+    private int apiTimeout;
 
     private static final String GPT_MODEL = "gpt-3.5-turbo";
 
@@ -45,13 +50,13 @@ public class TripsAdvisorService {
 
     @PostConstruct
     public void initGptService() {
-        openAiService = new OpenAiService("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",
-                Duration.ofSeconds(30));
+        openAiService = new OpenAiService(apiKey,
+                Duration.ofSeconds(apiTimeout));
 
         System.out.println("Connected to the OpenAI API");
     }
 
-    public Optional<List<PointOfInterest>> suggestPointsOfInterest(String city, int budget) {
+    public PointsOfInterestResponse suggestPointsOfInterest(String city, int budget) {
         String poi = cityTripsRepository.findPointsOfInterest(city, budget);
 
         try {
@@ -68,11 +73,18 @@ public class TripsAdvisorService {
                 cityTripsRepository.save(new CityTrip(city, budget, poi));
             }
 
-            return Optional.of(poiList);
-        } catch (JSONException e) {
+            PointsOfInterestResponse response = new PointsOfInterestResponse();
+            response.setPointsOfInterest(poiList);
+
+            return response;
+        } catch (Exception e) {
             System.err.println("Failed to parse: " + poi);
             e.printStackTrace();
-            return Optional.empty();
+
+            PointsOfInterestResponse response = new PointsOfInterestResponse();
+            response.setError(e.getMessage());
+
+            return response;
         }
     }
 

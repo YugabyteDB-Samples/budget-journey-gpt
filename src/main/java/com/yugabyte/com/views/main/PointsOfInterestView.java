@@ -7,20 +7,21 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.Lumo;
 import com.yugabyte.com.PointOfInterest;
+import com.yugabyte.com.PointsOfInterestResponse;
 import com.yugabyte.com.TripsAdvisorService;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.Binder;
 
 import java.text.NumberFormat;
-import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 @PageTitle("TripOnBudget")
 @Route("")
@@ -40,7 +41,7 @@ public class PointsOfInterestView extends VerticalLayout {
         logoLayout.setWidthFull();
         logoLayout.setAlignItems(Alignment.BASELINE);
 
-        Label title = new Label("TripOnBudget");
+        Label title = new Label("BudgetJourney");
         title.getStyle().set("font-weight", "bold");
         title.getStyle().set("font-size", "20px");
 
@@ -109,12 +110,13 @@ public class PointsOfInterestView extends VerticalLayout {
         if (binder.writeBeanIfValid(searchCriteria)) {
             // Call the suggestPointsOfInterest method and update the grid with the results
 
-            Optional<List<PointOfInterest>> optionalPointsOfInterest = tripsAdvisorService
+            PointsOfInterestResponse response = tripsAdvisorService
                     .suggestPointsOfInterest(searchCriteria.getCity(), searchCriteria.getBudget());
 
-            if (optionalPointsOfInterest.isPresent()) {
-                List<PointOfInterest> pointsOfInterest = optionalPointsOfInterest.get();
-                grid.setItems(pointsOfInterest);
+            if (response.getError() != null) {
+                showErrorMessage(String.format("Failed loading data from OpenAI GPT: %n%s", response.getError()));
+            } else {
+                grid.setItems(response.getPointsOfInterest());
             }
 
             searchButton.setEnabled(true);
@@ -140,6 +142,15 @@ public class PointsOfInterestView extends VerticalLayout {
         public void setBudget(int budget) {
             this.budget = budget;
         }
+    }
+
+    private void showErrorMessage(String errorMessage) {
+        Notification notification = new Notification();
+        notification.setText(errorMessage);
+        notification.setDuration(10_000); // Set the duration to 10 seconds
+        notification.setPosition(Position.TOP_CENTER);
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.open();
     }
 
 }
