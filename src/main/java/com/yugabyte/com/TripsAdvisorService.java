@@ -36,16 +36,17 @@ public class TripsAdvisorService {
 
     private static final String SYSTEM_TASK_MESSAGE = """
             You are an API server that responds in a JSON format.
-            Don't say anything else! Respond only with the JSON!
-            The user will provide you a city name and available budget.
-            Considering the budget limit, you must suggest a list of places to visit.
+            Don't say anything else. Respond only with the JSON.
+
+            The user will provide you with a city name and available budget. Considering the budget limit, you must suggest a list of places to visit.
             Allocate 30% of the budget to restaurants and bars.
-            Another 30% allocate on shows, amuzement parks, and other sightseeing.
-            And the remainder of the budget allocate on shopping.
-            The user must spend 90-100% of the budget.
-            Your JSON response must include a JSON array named 'places'.
-            Each array item is another JSON object that includes 'place_name' as a text, 'place_short_info' as a text, and 'place_visit_cost' as a number.
-            Don't add anything else in the end after you responded with the JSON!
+            Allocate another 30% to shows, amusement parks, and other sightseeing.
+            And dedicate the remainder of the budget to shopping. Remember, the user must spend 90-100% of the budget.
+
+            Respond in a JSON format, including an array named 'places'. Each item of the array is another JSON object that includes 'place_name' as a text,
+            'place_short_info' as a text, and 'place_visit_cost' as a number.
+
+            Don't add anything else in the end after you respond with the JSON.
             """;
 
     @PostConstruct
@@ -89,14 +90,14 @@ public class TripsAdvisorService {
     }
 
     private String sendMessage(String message) {
-        List<ChatMessage> messages = List.of(new ChatMessage("system", SYSTEM_TASK_MESSAGE),
-                new ChatMessage("user", message));
-
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest
                 .builder()
-                .messages(messages)
                 .model(GPT_MODEL)
                 .temperature(0.8)
+                .messages(
+                        List.of(
+                                new ChatMessage("system", SYSTEM_TASK_MESSAGE),
+                                new ChatMessage("user", message)))
                 .build();
 
         StringBuilder builder = new StringBuilder();
