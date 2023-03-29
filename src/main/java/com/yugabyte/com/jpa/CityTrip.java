@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -27,13 +26,18 @@ public class CityTrip {
     @Column(columnDefinition = "text")
     String pointsOfInterest;
 
+    @NotEmpty
+    String region;
+
     public CityTrip() {
     }
 
-    public CityTrip(@NotEmpty String cityName, @NotNull Integer budget, @NotEmpty String pointsOfInterest) {
+    public CityTrip(@NotEmpty String cityName, @NotNull Integer budget, @NotEmpty String pointsOfInterest,
+            @NotEmpty String region) {
         this.cityName = cityName;
         this.budget = budget;
         this.pointsOfInterest = pointsOfInterest;
+        this.region = region;
     }
 
     public int getId() {
@@ -68,10 +72,17 @@ public class CityTrip {
         this.pointsOfInterest = poiJson;
     }
 
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
     @Override
     public String toString() {
-        return "CityLandmark [id=" + id + ", cityName=" + cityName + ", budget=" + budget + ", poiJson="
-                + pointsOfInterest
-                + "]";
+        return "CityTrip [id=" + id + ", cityName=" + cityName + ", budget=" + budget + ", pointsOfInterest="
+                + pointsOfInterest + ", region=" + region + "]";
     }
 }

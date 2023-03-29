@@ -58,7 +58,7 @@ public class TripsAdvisorService {
     }
 
     public PointsOfInterestResponse suggestPointsOfInterest(String city, int budget) {
-        String poi = cityTripsRepository.findPointsOfInterest(city, budget);
+        String poi = cityTripsRepository.findPointsOfInterest(city, budget, "US");
 
         try {
             List<PointOfInterest> poiList;
@@ -71,7 +71,7 @@ public class TripsAdvisorService {
 
                 poiList = generaPointsOfInterest(poi);
 
-                cityTripsRepository.save(new CityTrip(city, budget, poi));
+                cityTripsRepository.save(new CityTrip(city, budget, poi, "US"));
             }
 
             PointsOfInterestResponse response = new PointsOfInterestResponse();
